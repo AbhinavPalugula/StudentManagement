@@ -94,8 +94,8 @@ marker {max-width: 100%; max-height: 100%;}
 <input data-clear-btn="true" type="text" required="required" title="Enter Class" name="pgEditDataClass" id="pgEditDataClass" placeholder="Enter Class" autocomplete="off"></input>
 </div>
 <div data-role="fieldcontain">
-<label for="pgEditDataAddress" id="lblpgEditDataAddress">Class<span style='color:red;'>*</span></label>
-<input data-clear-btn="true" type="text" required="required" title="Enter Class" name="pgEditDataAddress" id="pgEditDataAddress" placeholder="Enter Class" autocomplete="off"></input>
+<label for="pgEditDataAddress" id="lblpgEditDataAddress">Address<span style='color:red;'>*</span></label>
+<input data-clear-btn="true" type="text" required="required" title="Enter Address" name="pgEditDataAddress" id="pgEditDataAddress" placeholder="Enter Address" autocomplete="off"></input>
 </div>
 <div data-role="fieldcontain">
 <label for="pgEditDataDetail" id="lblpgEditDataDetail">Details<span style='color:red;'>*</span></label>
@@ -120,10 +120,10 @@ marker {max-width: 100%; max-height: 100%;}
 </div>
 <br><div style="text-align: center;" id="msgboxbuttons" class="ui-grid-a">
 <div class="ui-block-a">
-<a data-method="" data-id="" data-topage="" id="msgboxyes" data-role="button" data-icon="check">Yes</a>
+<a data-role="button" data-method="" data-did="" data-topage="" id="msgboxyes" data-icon="check">Yes</a>
 </div>
 <div class="ui-block-b">
-<a data-method="" data-id="" data-topage="" id="msgboxno" data-role="button" data-icon="delete" data-theme="b">No</a>
+<a data-role="button" data-method="" data-did="" data-topage="" id="msgboxno" data-icon="delete" data-theme="b">No</a>
 </div>
 </div>
 </div>
@@ -142,7 +142,7 @@ marker {max-width: 100%; max-height: 100%;}
 </div>
 <br><div style="text-align: center;" id="alertboxbuttons" class="ui-grid-solo">
 <div class="ui-block-a">
-<a data-method="" data-id="" data-topage="" id="alertboxok" data-role="button" data-icon="check" data-theme="b">Ok</a>
+<a data-method="" data-did="" data-topage="" id="alertboxok" data-role="button" data-icon="check" data-theme="b">Ok</a>
 </div>
 </div>
 </div>
@@ -168,12 +168,32 @@ app.databindings();
 app.checkForStorage();
 app.BindDevice();
 
+};
+
+app.databindings = function(){
+$(document).on('click', '#pgDataList a', function(e){
+e.preventDefault();
+e.stopImmediatePropagation();
+var href = $(this)[0].href.match(/\?.*$/)[0];
+var Title = href.replace(/^\?Title=/,'');
+$.mobile.changePage('#pgEditData', {transition: 'slide'});
+app.editData(Title);
+});
+
+$(document).on('pagebeforechange', function(e, data){
+var toPage = data.toPage[0].id;
+if(toPage == 'pgData'){
+// restart the storage check
+app.checkForStorage();
+}
+});
+
 //Delete confirmation
 $('#msgboxyes').on('click', function(e){
 e.preventDefault();
 e.stopImmediatePropagation();
 var yesmethod = $('#msgboxyes').data('method');
-var yesid = $('#msgboxyes').data('id');
+var yesid = $('#msgboxyes').data('did');
 app[yesmethod](yesid);
 });
 
@@ -198,26 +218,6 @@ e.preventDefault();
 e.stopImmediatePropagation();
 var href = $(this).attr('href');
 $.mobile.changePage(href, {transition: 'slide'});
-});
-
-};
-
-app.databindings = function(){
-$(document).on('click', '#pgDataList a', function(e){
-e.preventDefault();
-e.stopImmediatePropagation();
-var href = $(this)[0].href.match(/\?.*$/)[0];
-var Title = href.replace(/^\?Title=/,'');
-$.mobile.changePage('#pgEditData', {transition: 'slide'});
-app.editData(Title);
-});
-
-$(document).on('pagebeforechange', function(e, data){
-var toPage = data.toPage[0].id;
-if(toPage == 'pgData'){
-// restart the storage check
-app.checkForStorage();
-}
 });
 
 // bind the back button of the list
@@ -285,12 +285,11 @@ Title = Title.replace(/-/g,' ');
 $('#msgboxheader h1').text('Confirm Delete');
 $('#msgboxtitle').text(Title);
 $('#msgboxprompt').text('Are you sure that you want to delete this student?');
-$('#msgboxyes').data('method', 'deleteData');
+$('#msgboxyes').data('method', "deleteData");
 Title = Title.replace(/ /g,'-');
-$('#msgboxyes').data('id', Title);
+$('#msgboxyes').data('did', Title);
 $('#msgboxno').data('topage', 'pgEditData');
 $.mobile.changePage('#msgbox', {transition: 'pop'});
-
 });
 
 
@@ -398,6 +397,7 @@ $.mobile.changePage('#pgData', {transition: 'slide'});
 };
 
 app.deleteData = function(Title){
+console.log("deleting...")
 // clear the set values// get the Note records from localStorage
 var DataObj = app.getData();
 // delete selected Note
